@@ -29,10 +29,17 @@ sees the same animal regardless of screen size or language.
    Extract it into your FreeScout `Modules` directory, resulting in `Modules/InboxZero/module.json`.
 2. Enable **InboxZero** under **Manage → Modules**. FreeScout publishes the module's
    `Public` assets at `/modules/inboxzero` when activating it.
-3. Open an empty Unassigned folder. Other folders and searches keep their original
+3. Open each desired mailbox's **Settings**, check **Enable InboxZero for this mailbox**
+   and save. The checkbox is off by default, including for existing mailboxes after updating.
+4. Open an empty Unassigned folder. Other folders and searches keep their original
    empty state. Disable the module to restore the standard checkmark everywhere.
 
 Alternatively, clone this repository into `Modules/InboxZero`.
+
+Only users allowed to update mailbox settings can change this preference. It is
+stored in the mailbox's existing metadata; no database migration is needed.
+Unchecking it restores the standard empty state for that mailbox without affecting
+other mailboxes. Saving a signature-only form does not reset the preference.
 
 The module uses a Laravel view composer because FreeScout's empty-list partial
 has no dedicated module hook. It does not modify or replace any core source file.
@@ -142,8 +149,12 @@ The preview shell is a fixture, not a logged-in FreeScout session.
 - `/?animal=fox&lang=de`: a specific asset and its translated saying.
 - `/?animal=snail&lang=en`: another asset and language.
 - `/?folder=mine`: original FreeScout empty state as a control.
+- `/?enabled=0`: a mailbox without InboxZero enabled (standard empty state).
 
-Tests cover folder/AJAX scoping, restricted users, empty pagination, translations,
+The preview mailbox is explicitly opted in unless `enabled=0` is supplied.
+
+Tests cover per-mailbox opt-in, settings permissions and old form input,
+folder/AJAX scoping, restricted users, empty pagination, translations,
 shared daily selection, midnight, DST, year boundaries, all 100 entries and PNGs.
 The production module has no preview route; the preview script only runs under
 PHP's development server. Do not expose that server publicly.

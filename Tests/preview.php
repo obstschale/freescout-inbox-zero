@@ -50,8 +50,11 @@ $application->instance('auth', new Illuminate\Auth\RequestGuard(function () {
 }, $request));
 $folder = new App\Folder();
 $folder->type = ($_GET['folder'] ?? '') === 'mine' ? App\Folder::TYPE_MINE : App\Folder::TYPE_UNASSIGNED;
+$mailbox = new App\Mailbox();
+$mailbox->setMeta('inboxzero_enabled', ($_GET['enabled'] ?? '1') === '1');
+$folder->setRelation('mailbox', $mailbox);
 $animal = $_GET['animal'] ?? '';
-if (in_array($animal, Modules\InboxZero\DailyAnimal::ANIMALS, true) && $folder->type === App\Folder::TYPE_UNASSIGNED) {
+if ($mailbox->getMeta('inboxzero_enabled') && in_array($animal, Modules\InboxZero\DailyAnimal::ANIMALS, true) && $folder->type === App\Folder::TYPE_UNASSIGNED) {
     // Explicit asset previews use the production template; the default uses the core table integration.
     $html = $application['view']->make('inboxzero::empty', ['inboxZeroAnimal' => $animal])->render();
 } else {

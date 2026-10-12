@@ -3,6 +3,7 @@
 namespace Modules\InboxZero\Tests;
 
 use App\Folder;
+use App\Mailbox;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Routing\Route;
@@ -27,14 +28,21 @@ class InboxZeroTest extends TestCase
         parent::tearDown();
     }
 
-    private function setViewer($restricted)
+    private function setViewer($restricted, $canUpdateSettings = true)
     {
-        $viewer = new class($restricted) {
+        $viewer = new class($restricted, $canUpdateSettings) {
             private $restricted;
+            private $canUpdateSettings;
 
-            public function __construct($restricted)
+            public function __construct($restricted, $canUpdateSettings)
             {
                 $this->restricted = $restricted;
+                $this->canUpdateSettings = $canUpdateSettings;
+            }
+
+            public function can($ability, $mailbox)
+            {
+                return $ability === 'updateSettings' && $this->canUpdateSettings;
             }
 
             public function canSeeOnlyAssignedConversations()
@@ -48,7 +56,7 @@ class InboxZeroTest extends TestCase
         $this->application->instance('auth', $guard);
     }
 
-    private function renderEmpty($routeName, $folderType, $total = 0, $input = [], $data = [])
+    private function renderEmpty($routeName, $folderType, $total = 0, $input = [], $data = [], $mailbox = null)
     {
         $request = Request::create('/mailbox/1', 'GET', $input);
         $route = (new Route('GET', '/mailbox/1', function () {}))->name($routeName);
@@ -58,6 +66,11 @@ class InboxZeroTest extends TestCase
         $this->application->instance('request', $request);
         $folder = new Folder();
         $folder->type = $folderType;
+        if ($mailbox === null) {
+            $mailbox = new Mailbox();
+            $mailbox->setMeta('inboxzero_enabled', true);
+        }
+        $folder->setRelation('mailbox', $mailbox);
 
         // Render the actual core table, including its inherited-data empty partial.
         return $this->application['view']->make('conversations/conversations_table', array_merge([
@@ -83,6 +96,56 @@ class InboxZeroTest extends TestCase
         $this->assertStringNotContainsString('inboxzero-animal', $this->renderEmpty('mailboxes.view', Folder::TYPE_UNASSIGNED, 0, [], ['conversations_filter' => ['status' => 1]]));
         $this->setViewer(true);
         $this->assertStringNotContainsString('inboxzero-animal', $this->renderEmpty('mailboxes.view', Folder::TYPE_UNASSIGNED));
+    }
+
+    public function testMailboxOptInIsIndependentAndCanBeDisabled()
+    {
+        $enabledMailbox = new Mailbox();
+        $defaultMailbox = new Mailbox();
+        $enabledMailbox->setMeta('other_module', 'preserved');
+        $render = function ($mailbox) {
+            return $this->renderEmpty('mailboxes.view', Folder::TYPE_UNASSIGNED, 0, [], [], $mailbox);
+        };
+        $this->assertStringContainsString('glyphicon-ok', $render($enabledMailbox));
+        \Eventy::action('mailbox.settings_before_save', $enabledMailbox, Request::create('/', 'POST', ['inboxzero_enabled' => '1']));
+        $this->assertStringContainsString('inboxzero-animal', $render($enabledMailbox));
+        $this->assertStringContainsString('glyphicon-ok', $render($defaultMailbox));
+        $this->assertSame('preserved', $enabledMailbox->getMeta('other_module'));
+
+        // Other forms and signature-only users cannot change this preference.
+        \Eventy::action('mailbox.settings_before_save', $enabledMailbox, Request::create('/', 'POST', ['signature' => 'Hello']));
+        $this->assertTrue($enabledMailbox->getMeta('inboxzero_enabled'));
+        $this->setViewer(false, false);
+        \Eventy::action('mailbox.settings_before_save', $enabledMailbox, Request::create('/', 'POST', ['inboxzero_enabled' => '0']));
+        $this->assertTrue($enabledMailbox->getMeta('inboxzero_enabled'));
+        $this->setViewer(false);
+        \Eventy::action('mailbox.settings_before_save', $enabledMailbox, Request::create('/', 'POST', ['inboxzero_enabled' => '0']));
+        $this->assertStringContainsString('glyphicon-ok', $render($enabledMailbox));
+        $this->assertFalse($enabledMailbox->getMeta('inboxzero_enabled'));
+    }
+
+    public function testSettingsShowSavedAndOldInputOnlyToAuthorizedUsers()
+    {
+        $mailbox = new Mailbox();
+        // Never start or save this session; old input stays in the Store's memory.
+        $session = new \Illuminate\Session\Store('inboxzero-test', new \SessionHandler());
+        $this->application['request']->setLaravelSession($session);
+        $render = function () use ($mailbox) {
+            ob_start();
+            \Eventy::action('mailbox.update.after_signature', $mailbox);
+
+            return ob_get_clean();
+        };
+        $this->assertStringContainsString('Enable InboxZero for this mailbox', $render());
+        $this->assertStringNotContainsString(' checked', $render());
+        $mailbox->setMeta('inboxzero_enabled', true);
+        $this->assertStringContainsString(' checked', $render());
+        $session->flashInput(['inboxzero_enabled' => '0']);
+        $this->assertStringNotContainsString(' checked', $render());
+        $this->application->setLocale('de');
+        $this->assertStringContainsString('InboxZero für dieses Postfach aktivieren', $render());
+        $this->setViewer(false, false);
+        $this->assertSame('', $render());
     }
 
     public function testColleaguesShareTheAnimalButGetTheirOwnLanguage()

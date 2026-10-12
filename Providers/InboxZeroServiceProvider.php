@@ -21,6 +21,19 @@ class InboxZeroServiceProvider extends ServiceProvider
             return $stylesheets;
         });
 
+        \Eventy::addAction('mailbox.update.after_signature', function ($mailbox) {
+            if (auth()->user()->can('updateSettings', $mailbox)) {
+                echo view('inboxzero::mailbox-settings', compact('mailbox'))->render();
+            }
+        }, 20, 1);
+
+        \Eventy::addAction('mailbox.settings_before_save', function ($mailbox, $request) {
+            // Signature-only forms must not reset this mailbox setting.
+            if (auth()->user()->can('updateSettings', $mailbox) && $request->has('inboxzero_enabled')) {
+                $mailbox->setMeta('inboxzero_enabled', $request->input('inboxzero_enabled') === '1');
+            }
+        }, 20, 2);
+
         // FreeScout has no empty-list hook. Change only this partial's path, leaving
         // the core query, authorization, table and AJAX pagination untouched.
         $this->app['view']->composer('partials/empty', function (View $view) {
@@ -50,6 +63,11 @@ class InboxZeroServiceProvider extends ServiceProvider
             // A restricted agent's empty personal result is not a team-wide Inbox Zero.
             $user = $this->app['auth']->user();
             if (!$user || $user->canSeeOnlyAssignedConversations()) {
+                return;
+            }
+
+            $mailbox = $folder->mailbox;
+            if (!$mailbox || !$mailbox->getMeta('inboxzero_enabled', false)) {
                 return;
             }
 

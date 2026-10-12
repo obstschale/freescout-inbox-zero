@@ -2,6 +2,8 @@
 
 return [
     'empty' => 'Keine unzugewiesenen Tickets',
+    'enable_mailbox' => 'InboxZero für dieses Postfach aktivieren',
+    'enable_mailbox_help' => 'Zeigt das Tier des Tages, wenn der Ordner „Nicht zugewiesen“ dieses Postfachs leer ist.',
     'animals' => [
         'fox' => ['name' => 'Fuchs', 'message' => 'Vielleicht wird dieser Tee heute tatsächlich warm getrunken.'],
         'snail' => ['name' => 'Schnecke', 'message' => 'Kopf hoch, Köfferchen blau: Das riecht nach Abenteuer.'],

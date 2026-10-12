@@ -3,7 +3,7 @@
     "alias": "inboxzero",
     "img": "/modules/inboxzero/images/logo.png",
     "description": "A quiet daily animal celebration for an empty Unassigned inbox. Includes 100 illustrations and English and German translations.",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "detailsUrl": "https://github.com/obstschale/freescout-inbox-zero",
     "latestVersionUrl": "https://github.com/obstschale/freescout-inbox-zero/releases/latest/download/module.json",
     "latestVersionZipUrl": "https://github.com/obstschale/freescout-inbox-zero/releases/latest/download/InboxZero.zip",

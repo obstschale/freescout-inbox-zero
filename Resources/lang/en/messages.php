@@ -2,6 +2,8 @@
 
 return [
     'empty' => 'No unassigned conversations',
+    'enable_mailbox' => 'Enable InboxZero for this mailbox',
+    'enable_mailbox_help' => 'Show the daily animal when this mailbox’s Unassigned folder is empty.',
     'animals' => [
         'fox' => ['name' => 'Fox', 'message' => 'Maybe this tea will actually be enjoyed while it is warm.'],
         'snail' => ['name' => 'Snail', 'message' => 'Head up, blue briefcase packed. Adventure has a lovely ring to it.'],

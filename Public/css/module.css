@@ -1,3 +1,8 @@
+.checkbox.inboxzero-mailbox-checkbox {
+    margin-left: 0;
+    padding-left: 0;
+}
+
 .empty-content.inboxzero {
     max-width: 620px;
     padding: 0 20px 32px;
