@@ -1,20 +1,70 @@
 # Inbox Zero
 
+<img src="Public/images/logo.png" alt="A happy fox with an empty inbox tray and a green checkmark" width="128" height="128">
+
 A quiet empty-state replacement for FreeScout's **Unassigned** folder: 100 small,
 transparent animal illustrations with English and German sayings. No animation,
 sound, buttons, scores, external requests, scheduled jobs or database migrations.
 
+## Screenshots
+
+English previews rendered with FreeScout's conversation table, the module's
+illustrations and real CSS. These are isolated fixtures with sample mailbox
+details, not screenshots of customer conversations.
+
+**Desktop — a quiet moment with the fox**
+
+![Empty Unassigned inbox with a fox enjoying tea and the message: Maybe this tea will actually be enjoyed while it is warm.](docs/screenshots/inbox-zero-desktop.png)
+
+**Mobile — a proud penguin**
+
+![Empty Unassigned inbox on a narrow screen with a proud penguin and the message: Chest out, clipboard blank. Looking rather distinguished.](docs/screenshots/inbox-zero-mobile.png)
+
+The examples show two different days' animals. On the same calendar day, everyone
+sees the same animal regardless of screen size or language.
+
 ## Installation
 
-1. Copy this directory to `Modules/InboxZero` in your FreeScout installation.
+1. Download `InboxZero.zip` from the [latest release](https://github.com/obstschale/freescout-inbox-zero/releases/latest).
+   Extract it into your FreeScout `Modules` directory, resulting in `Modules/InboxZero/module.json`.
 2. Enable **InboxZero** under **Manage → Modules**. FreeScout publishes the module's
    `Public` assets at `/modules/inboxzero` when activating it.
 3. Open an empty Unassigned folder. Other folders and searches keep their original
    empty state. Disable the module to restore the standard checkmark everywhere.
 
+Alternatively, clone this repository into `Modules/InboxZero`.
+
 The module uses a Laravel view composer because FreeScout's empty-list partial
 has no dedicated module hook. It does not modify or replace any core source file.
 Test the integration after FreeScout upgrades that change the conversation table.
+
+## GitHub updates and releases
+
+FreeScout checks the latest stable GitHub release using these `module.json` fields:
+
+```json
+{
+    "latestVersionUrl": "https://github.com/obstschale/freescout-inbox-zero/releases/latest/download/module.json",
+    "latestVersionZipUrl": "https://github.com/obstschale/freescout-inbox-zero/releases/latest/download/InboxZero.zip"
+}
+```
+
+Both assets are public and must come from the same tagged commit. The ZIP contains
+an `InboxZero/` root directory, unlike GitHub's automatic source archives. Using
+release assets instead of `main` keeps unreleased changes out of update checks.
+See [CHANGELOG.md](CHANGELOG.md) for release notes.
+
+For maintainers, generate `CHANGELOG.md` with `changelogger release <tag>`, commit
+the version and documentation changes, and tag that commit. Build the release
+assets outside the working tree:
+
+```sh
+git archive --format=zip --prefix=InboxZero/ --output=/tmp/InboxZero.zip v0.1.0
+git show v0.1.0:module.json > /tmp/module.json
+```
+
+Upload both files to the matching stable release. For later releases, substitute
+the new tag in both commands and increment `version` in `module.json`.
 
 ## One animal per calendar day
 
