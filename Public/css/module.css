@@ -1,0 +1,41 @@
+.empty-content.inboxzero {
+    max-width: 620px;
+    padding: 0 20px 32px;
+}
+
+.inboxzero-animal {
+    display: block;
+    width: 180px;
+    max-width: 100%;
+    height: 160px;
+    object-fit: contain;
+    margin: 0 auto 20px;
+}
+
+.empty-content.inboxzero .inboxzero-message {
+    color: #586774;
+    font-size: 16px;
+    font-weight: normal;
+    line-height: 1.6;
+    padding: 0;
+    margin-bottom: 8px;
+    overflow-wrap: break-word;
+}
+
+.empty-content.inboxzero .inboxzero-status {
+    color: #657582;
+    font-size: 14px;
+    line-height: 1.5;
+    padding: 0;
+}
+
+@media (max-width: 480px) {
+    .empty-content.inboxzero {
+        margin-top: 5em;
+    }
+
+    .inboxzero-animal {
+        width: 150px;
+        height: 135px;
+    }
+}

@@ -1,0 +1,61 @@
+<?php
+
+namespace Modules\InboxZero\Providers;
+
+use App\Folder;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\ServiceProvider;
+use Illuminate\View\View;
+use Modules\InboxZero\DailyAnimal;
+
+class InboxZeroServiceProvider extends ServiceProvider
+{
+    public function boot()
+    {
+        $this->loadViewsFrom(__DIR__.'/../Resources/views', 'inboxzero');
+        $this->loadTranslationsFrom(__DIR__.'/../Resources/lang', 'inboxzero');
+
+        \Eventy::addFilter('stylesheets', function ($stylesheets) {
+            $stylesheets[] = \Module::getPublicPath('inboxzero').'/css/module.css';
+
+            return $stylesheets;
+        });
+
+        // FreeScout has no empty-list hook. Change only this partial's path, leaving
+        // the core query, authorization, table and AJAX pagination untouched.
+        $this->app['view']->composer('partials/empty', function (View $view) {
+            $request = $this->app['request'];
+            $route = $request->route();
+            if (!$route) {
+                return;
+            }
+            $isMailbox = in_array($route->getName(), ['mailboxes.view', 'mailboxes.view.folder'], true);
+            $isPagination = $route->getName() === 'conversations.ajax'
+                && $request->input('action') === 'conversations_pagination';
+            if (!$isMailbox && !$isPagination) {
+                return;
+            }
+
+            $data = $view->getData();
+            $folder = $data['folder'] ?? null;
+            $conversations = $data['conversations'] ?? null;
+            if (!$folder instanceof Folder || (int) $folder->type !== Folder::TYPE_UNASSIGNED
+                || !$conversations instanceof LengthAwarePaginator
+                || $conversations->total() != 0 || $conversations->count() != 0
+                || !empty($data['params']) || !empty($data['conversations_filter'])
+                || ($data['empty_text'] ?? null) !== __('There are no conversations here')) {
+                return;
+            }
+
+            // A restricted agent's empty personal result is not a team-wide Inbox Zero.
+            $user = $this->app['auth']->user();
+            if (!$user || $user->canSeeOnlyAssignedConversations()) {
+                return;
+            }
+
+            $animal = DailyAnimal::forDate(new \DateTimeImmutable(), config('app.timezone'));
+            $view->with('inboxZeroAnimal', $animal);
+            $view->setPath($this->app['view']->getFinder()->find('inboxzero::empty'));
+        });
+    }
+}

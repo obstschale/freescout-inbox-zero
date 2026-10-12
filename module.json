@@ -1,0 +1,17 @@
+{
+    "name": "InboxZero",
+    "alias": "inboxzero",
+    "img": "/modules/inboxzero/images/logo.png",
+    "description": "A quiet daily animal celebration for an empty Unassigned inbox. Includes 100 illustrations and English and German translations.",
+    "version": "1.0.0",
+    "requiredAppVersion": "1.8.0",
+    "license": "AGPL-3.0",
+    "active": 0,
+    "order": 0,
+    "providers": [
+        "Modules\\InboxZero\\Providers\\InboxZeroServiceProvider"
+    ],
+    "aliases": {},
+    "files": [],
+    "requires": []
+}
